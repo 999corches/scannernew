@@ -34,20 +34,20 @@
             height: 250,
 
         },
-        fps: 24
+        fps: 20
 
     });
 
     scanner.render(success, error);
 
-    function success () {
+    function success(decodedText, decodedResult){
         document.getElementById('result').innerHTML = `
         <h3>Erfolgreich gescannt</h3>
-        <p>${result}</p>
+        <p>${decodedText}</p>
         <br /> <br />
         <a href="index.html">nochmal scannen</a>`;
 
-        scanner.clear
+        scanner.clear();
 
         document.getElementById('reader').remove();
     }
