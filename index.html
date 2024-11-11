@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,25 +19,15 @@
             max-width: 90vw;
             margin-bottom: 20px;
         }
-        #result {
+        #result, #edit-form {
             font-size: 1.2rem;
             margin-top: 20px;
         }
         #result h3 {
             color: #28a745;
         }
-        #retry-button {
-            display: inline-block;
-            margin-top: 15px;
-            padding: 10px 15px;
-            background-color: #007bff;
-            color: #fff;
-            border: none;
-            cursor: pointer;
-            border-radius: 5px;
-        }
-        #retry-button:hover {
-            background-color: #0056b3;
+        #edit-form input, #edit-form button {
+            margin: 5px;
         }
     </style>
 </head>
@@ -45,31 +35,72 @@
 <div class="container">
     <div id="reader"></div>
     <div id="result"></div>
+    <div id="edit-form" style="display: none;">
+        <input type="text" id="newValue" placeholder="Neuer Wert">
+        <button onclick="updateValue()">Wert ändern</button>
+        <button onclick="deleteValue()">Wert löschen</button>
+    </div>
 </div>
 <script>
+    const scriptUrl = 'YOUR_SCRIPT_URL_HERE'; // Ersetze mit deiner Apps Script URL
+
     const scanner = new Html5QrcodeScanner('reader', {
         qrbox: { width: 250, height: 250 },
         fps: 20
     });
 
+    let scannedCode = '';
+
     scanner.render(success, error);
 
     function success(decodedText, decodedResult) {
+        scannedCode = decodedText;
         document.getElementById('result').innerHTML = `
             <h3>Erfolgreich gescannt</h3>
-            <p>${decodedText}</p>
-            <button id="retry-button">nochmal scannen</button>
+            <p>QR-Code: ${decodedText}</p>
         `;
+        document.getElementById('edit-form').style.display = 'block';
+
         scanner.clear();
         document.getElementById('reader').remove();
-
-        document.getElementById('retry-button').addEventListener('click', () => {
-            location.reload();
-        });
     }
 
     function error(errorMessage) {
         console.log("QR Scan Error: ", errorMessage);
+    }
+
+    function updateValue() {
+        const newValue = document.getElementById('newValue').value;
+        if (!newValue) {
+            alert('Bitte geben Sie einen neuen Wert ein');
+            return;
+        }
+
+        fetch(scriptUrl, {
+            method: 'POST',
+            body: JSON.stringify({ qrCode: scannedCode, newValue: newValue }),
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(response => response.text())
+        .then(result => {
+            alert(result);
+            location.reload();
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function deleteValue() {
+        fetch(scriptUrl, {
+            method: 'POST',
+            body: JSON.stringify({ qrCode: scannedCode, delete: 'true' }),
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(response => response.text())
+        .then(result => {
+            alert(result);
+            location.reload();
+        })
+        .catch(error => console.error('Error:', error));
     }
 </script>
 </body>
