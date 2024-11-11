@@ -6,102 +6,70 @@
     <title>BarcodeScanner</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        .container {
+        body, html {
+            height: 100%;
+            margin: 0;
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
+            justify-content: center;
             font-family: Arial, sans-serif;
-            padding: 20px;
+            padding-top: 50px;
         }
+    
+        .container {
+            text-align: center;
+        }
+    
         #reader {
             width: 600px;
             max-width: 90vw;
             margin-bottom: 20px;
         }
-        #result, #edit-form {
+    
+        #result {
             font-size: 1.2rem;
             margin-top: 20px;
         }
+    
         #result h3 {
             color: #28a745;
         }
-        #edit-form input, #edit-form button {
-            margin: 5px;
-        }
     </style>
+    
 </head>
 <body>
 <div class="container">
     <div id="reader"></div>
     <div id="result"></div>
-    <div id="edit-form" style="display: none;">
-        <input type="text" id="newValue" placeholder="Neuer Wert">
-        <button onclick="updateValue()">Wert ändern</button>
-        <button onclick="deleteValue()">Wert löschen</button>
-    </div>
 </div>
 <script>
-    const scriptUrl = 'https://script.google.com/macros/s/AKfycbwj7hIqEqK4Fg8RCeW0KbUSm31M5ZbDw6JyWScDKIldBjrNfPh6wslDm3mZlmf6h0K8zQ/exec'; // Ersetze mit deiner Apps Script URL
-
     const scanner = new Html5QrcodeScanner('reader', {
-        qrbox: { width: 250, height: 250 },
-        fps: 20
+        qrbox: {
+            width: 200,
+            height: 250
+        },
+        fps: 20,
     });
 
-    let scannedCode = '';
-
-    scanner.render(success, error);
-
-    function success(decodedText, decodedResult) {
-        scannedCode = decodedText;
+    // Funktion, die aufgerufen wird, wenn der Barcode erfolgreich gescannt wurde
+    function onScanSuccess(decodedText, decodedResult) {
         document.getElementById('result').innerHTML = `
-            <h3>Erfolgreich gescannt</h3>
-            <p>QR-Code: ${decodedText}</p>
-        `;
-        document.getElementById('edit-form').style.display = 'block';
+        <h3>Erfolgreich gescannt</h3>
+        <p>${decodedText}</p>
+        <br /> <br />
+        <a href="index.html">nochmal scannen</a>`;
 
-        scanner.clear();
-        document.getElementById('reader').remove();
+        scanner.clear(); // Stoppt den Scanner
+        document.getElementById('reader').remove(); // Entfernt den Scanner von der Seite
     }
 
-    function error(errorMessage) {
-        console.log("QR Scan Error: ", errorMessage);
+    // Funktion, die aufgerufen wird, wenn ein Fehler auftritt
+    function onScanError(errorMessage) {
+        console.warn(errorMessage);
     }
 
-    function updateValue() {
-        const newValue = document.getElementById('newValue').value;
-        if (!newValue) {
-            alert('Bitte geben Sie einen neuen Wert ein');
-            return;
-        }
-
-        fetch(scriptUrl, {
-            method: 'POST',
-            body: JSON.stringify({ qrCode: scannedCode, newValue: newValue }),
-            headers: { 'Content-Type': 'application/json' }
-        })
-        .then(response => response.text())
-        .then(result => {
-            alert(result);
-            location.reload();
-        })
-        .catch(error => console.error('Error:', error));
-    }
-
-    function deleteValue() {
-        fetch(scriptUrl, {
-            method: 'POST',
-            body: JSON.stringify({ qrCode: scannedCode, delete: 'true' }),
-            headers: { 'Content-Type': 'application/json' }
-        })
-        .then(response => response.text())
-        .then(result => {
-            alert(result);
-            location.reload();
-        })
-        .catch(error => console.error('Error:', error));
-    }
+    // Startet den Scanner mit den Callback-Funktionen
+    scanner.render(onScanSuccess, onScanError);
 </script>
 </body>
 </html>
+
